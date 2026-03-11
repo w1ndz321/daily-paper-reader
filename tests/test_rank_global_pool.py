@@ -24,6 +24,20 @@ class RankGlobalPoolTest(unittest.TestCase):
             sys.path.insert(0, str(src_dir))
         cls.mod = _load_module("rank_mod", src_dir / "3.rank_papers.py")
 
+    def test_resolve_global_pool_budget_scales_with_total_papers(self):
+        self.assertEqual(
+            self.mod.resolve_global_pool_budget(1000, 4),
+            (30, 8, 120),
+        )
+        self.assertEqual(
+            self.mod.resolve_global_pool_budget(3000, 4),
+            (50, 12, 200),
+        )
+        self.assertEqual(
+            self.mod.resolve_global_pool_budget(10000, 4),
+            (120, 20, 300),
+        )
+
     def test_build_global_candidate_ids_keeps_lane_top_and_global_top(self):
         queries = [
             {
@@ -120,8 +134,9 @@ class RankGlobalPoolTest(unittest.TestCase):
             ranked_ids = [item.get("paper_id") for item in ranked]
             self.assertEqual(ranked_ids, ["p1", "p2"])
             self.assertEqual(saved.get("global_candidate_ids"), ["p2", "p1", "p3"])
-            self.assertEqual(saved.get("global_pool_limit"), 150)
-            self.assertEqual(saved.get("global_pool_guaranteed_per_lane"), 10)
+            self.assertEqual(saved.get("global_pool_lane_top_k"), 30)
+            self.assertEqual(saved.get("global_pool_limit"), 60)
+            self.assertEqual(saved.get("global_pool_guaranteed_per_lane"), 8)
 
 
 if __name__ == "__main__":
